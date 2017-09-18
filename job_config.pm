@@ -6,6 +6,7 @@ sub new {
     my $job_config = {};
     my %next = {};
     bless $job_config, "JobConfig";
+    return $job_config;
 }
 
 sub parse {
