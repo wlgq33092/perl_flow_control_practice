@@ -10,6 +10,7 @@ sub new {
     };
     print "$job->{name} is created\n";
     bless $job, "jobb";
+    return $job;
 }
 
 sub next {
