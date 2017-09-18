@@ -2,9 +2,18 @@
 
 package JobConfig;
 
+my %next = {};
+my $job;
 sub new {
+    my $class = shift;
+    my $type = shift;
     my $job_config = {};
-    my %next = {};
+    $job_config->{start} = 0;
+    $job_config->{end} = 0;
+    $job_config->{type} = $type;
+    $job_config->{job} = $type->new();
+    $job = $type->new();
+    print "job_config: type is $job_config->{type}\n";
     bless $job_config, "JobConfig";
     return $job_config;
 }

@@ -1,39 +1,56 @@
 #! /usr/bin/perl
 
-require "common.pm";
+#use strict;
+use Data::Dumper;
+#require "common.pm";
 require "job_config.pm";
-
-package Flow;
 
 my $pwd = `pwd`;
 chomp $pwd;
 my $job_path = $pwd . "/jobs/";
 unshift @INC, $job_path;
 
-print "stwu debug: $_\n" foreach (@INC);
-
-sub new {
-    my $flow = {};
-    $flow{"jobs"} = ();
-    my %flow_jobs = {};
-    bless $flow, "Flow";
-    return $flow;
-}
-
-sub DESTROY {
-    print "flow destroy\n";
-}
+require "joba.pm";
+require "jobb.pm";
+require "jobc.pm";
 
 sub load_job {
-    my $self = shift;
+    #my $self = shift;
     my $job_module = shift;
     #$job_module = "JOB::" . $job_module;
     my $job_module_file = $job_module . ".pm";
     print "Flow, load_job, job_module is $job_module\n";
 
-    require "$job_module_file";
+    require $job_module_file;
 
     return $job_module->new();
+}
+
+load_job("joba");
+load_job("jobb");
+load_job("jobc");
+
+package Flow;
+
+my $job1 = JobConfig->new("joba");
+my $job2 = JobConfig->new("jobb");
+my $job3 = JobConfig->new("jobc");
+my %flow_jobs = (
+    "start" => \$job1,
+    "job1"  => \$job1,
+    "job2"  => \$job2,
+    "job3"  => \$job3
+);
+foreach $key (keys %flow_jobs) {
+    print "stwu debug, package flow: flow jobs keys is $key\n";
+}
+
+sub new {
+    my $flow = {};
+    #$flow{jobs} = ();
+    #$flow{name} = "flow";
+    bless $flow, "Flow";
+    return $flow;
 }
 
 sub append_job {
@@ -44,25 +61,45 @@ sub append_job {
 
 sub build_flow {
     my $self = shift;
-
-    my $job1 = JobConfig->new();
-    my $job2 = JobConfig->new();
-    my $job3 = JobConfig->new();
     $self->{start} = "job1";
-
-    $flow_jobs{"job1"} = \$job1;
-    $flow_jobs{"job2"} = \$job2;
-    $flow_jobs{"job3"} = \$job3;
 
     $job1->insert_next_table("finish", "job2");
     $job2->insert_next_table("finish", "job3");
+
+    print "build_flow finish\n";
 }
 
 sub run {
     my $self = shift;
-    my $flow_jobs = $self->{flow_jobs};
-    my $start_job_name = $self->{start};
-    my $start_job = $flow_jobs->{$start_job_name};
+    #my $flow_jobs = $self->{flow_jobs};
+    #print "run: self start job name is $start_job_name\n";
+    #my $start_job_name = $self->{start};
+    foreach my $key (keys %flow_jobs) {
+        print "stwu debug: flow jobs keys is $key\n";
+    }
+    print "run flow, self name is $self->{name}\n";
+
+    my $start_job = $flow_jobs{"start"};
+    print "run job: start_job is $start_job->{job}->{name}\n";
+
+    my $cur_job_conf = $start_job;
+    my $job_type = $cur_job_conf->{type};
+    print "run, job_type is $job_type\n";
+    my $cur_job = $job_type->new();
+    while (1) {
+        my %conditions = $cur_job_conf->{next};
+        foreach my $condition (keys %conditions) {
+            if ($cur_job->$condition()) {
+                my $next_job_name = $cur_job_conf->{next}->{$condition};
+                $cur_job_conf = $flow_job{$next_job_name};
+                last;
+            }
+        }
+    }
+}
+
+sub DESTROY {
+    print "flow destroy\n";
 }
 
 1;

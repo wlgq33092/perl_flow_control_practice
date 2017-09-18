@@ -29,4 +29,16 @@ sub finish {
     return get_job_result($self->{name});
 }
 
+sub prepare {
+    return 1;
+}
+
+sub submit {
+    return 1;
+}
+
+sub done {
+    return 1;
+}
+
 1;
