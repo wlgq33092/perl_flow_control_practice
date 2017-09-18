@@ -17,6 +17,7 @@ sub new {
     $flow{"jobs"} = ();
     my %flow_jobs = {};
     bless $flow, "Flow";
+    return $flow;
 }
 
 sub DESTROY {
