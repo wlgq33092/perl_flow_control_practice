@@ -26,7 +26,7 @@ sub DESTROY {
 
 sub finish {
     my $self = shift;
-    return get_job_result($self->{name});
+    return common::get_job_result($self->{name});
 }
 
 sub prepare {

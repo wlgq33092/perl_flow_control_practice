@@ -1,9 +1,11 @@
 #! /usr/bin/perl
 
+package common;
+
 my $job_result = {
-    "job1" => 1,
-    "job2" => 1,
-    "job3" => 1
+    "joba" => 1,
+    "jobb" => 1,
+    "jobc" => 1
 };
 
 my $job_def_count = {
