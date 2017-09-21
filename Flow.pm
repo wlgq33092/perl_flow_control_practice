@@ -3,11 +3,10 @@
 use strict;
 use Data::Dumper;
 use Cwd;
-#require "common.pm";
+
 require "job_config.pm";
 require "LogUtil.pm";
 
-#my $pwd = `pwd`;
 my $pwd = &getcwd;
 chomp $pwd;
 my $job_path = $pwd . "/jobs/";
@@ -21,8 +20,6 @@ sub new {
     my $flow = {
         "name" => "flow"
     };
-    #$flow{jobs} = ();
-    #$flow{name} = "flow";
     bless $flow, "Flow";
     return $flow;
 }
@@ -72,7 +69,6 @@ sub run {
     my %obj = %{$self};
 
     my $cur_job_conf = $flow_jobs{"start"};
-    #my $cur_job_conf = $start_job;
     my $job_type = $cur_job_conf->{type};
     print "run, job_type is $job_type\n";
     my $cur_job = $job_type->new();
