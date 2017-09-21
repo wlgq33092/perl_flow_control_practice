@@ -2,8 +2,6 @@
 
 package JobConfig;
 
-my %next = {};
-my $job;
 sub new {
     my $class = shift;
     my $type = shift;
@@ -12,7 +10,7 @@ sub new {
     $job_config->{end} = 0;
     $job_config->{type} = $type;
     $job_config->{job} = $type->new();
-    $job_config->{next} = ();
+    $job_config->{next} = {};
     #$job = $type->new();
     print "job_config: type is $job_config->{type}\n";
     bless $job_config, "JobConfig";
@@ -32,11 +30,13 @@ sub insert_next_table {
     my %obj = %{$self};
 
     print "job config: insert next table, $condition, $nextjob\n";
-    $next{$condition} = $nextjob;
+    $obj{next}->{$condition} = $nextjob;
 }
 
 sub get_next_table {
-    return \%next;
+    my $self = shift;
+    my %obj = %{$self};
+    return $obj{next};
 }
 
 sub set_type {

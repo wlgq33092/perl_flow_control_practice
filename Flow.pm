@@ -1,11 +1,14 @@
 #! /usr/bin/perl
 
-#use strict;
+use strict;
 use Data::Dumper;
+use Cwd;
 #require "common.pm";
 require "job_config.pm";
+require "LogUtil.pm";
 
-my $pwd = `pwd`;
+#my $pwd = `pwd`;
+my $pwd = &getcwd;
 chomp $pwd;
 my $job_path = $pwd . "/jobs/";
 unshift @INC, $job_path;
@@ -52,6 +55,7 @@ sub build_flow {
 
     $job1->insert_next_table("finish", "job2");
     $job2->insert_next_table("finish", "job3");
+    $job3->insert_next_table("finish", "END");
 
     %flow_jobs = (
         "start" => $job1,
@@ -66,31 +70,38 @@ sub build_flow {
 sub run {
     my $self = shift;
     my %obj = %{$self};
-    #my $flow_jobs = $self->{flow_jobs};
-    #print "run: self start job name is $start_job_name\n";
-    #my $start_job_name = $self->{start};
-    foreach my $key (keys %flow_jobs) {
-        print "stwu debug: flow jobs keys is $key\n";
-    }
-    print "run flow, self name is $obj{name}\n";
 
-    my $start_job = $flow_jobs{"start"};
-    print "run job: start_job is $start_job->{job}->{name}\n";
-
-    my $cur_job_conf = $start_job;
+    my $cur_job_conf = $flow_jobs{"start"};
+    #my $cur_job_conf = $start_job;
     my $job_type = $cur_job_conf->{type};
     print "run, job_type is $job_type\n";
     my $cur_job = $job_type->new();
+    my $flow_finish = 0;
     while (1) {
-        print "current job conf is $cur_job_conf->{job}->{name}\n";
+        my $has_next = 0;
+        LogUtil::dump("current job conf:\n", $cur_job_conf);
         my $conditions = $cur_job_conf->get_next_table();
+        LogUtil::dump("print conditions:\n", $conditions);
         foreach my $condition (keys %{$conditions}) {
-            print "condition is $condition, finish res is $cur_job->$condition\n";
             if ($cur_job->$condition()) {
-                my $next_job_name = $cur_job_conf->get_next_table()->{$condition};
-                $cur_job_conf = $flow_job{$next_job_name};
+                my $next_job_name = $conditions->{$condition};
+                LogUtil::dump("next job name:\n", $next_job_name);
+                if ($next_job_name eq "END") {
+                    $flow_finish = 1;
+                    last;
+                }
+                $cur_job_conf = $flow_jobs{$next_job_name};
+                $has_next = 1;
                 last;
             }
+        }
+        if ($flow_finish) {
+            print "flow run to done.\n";
+            last;
+        }
+        if (0 == $has_next) {
+            print "job abort before flow run to done\n";
+            last;
         }
     }
 }
