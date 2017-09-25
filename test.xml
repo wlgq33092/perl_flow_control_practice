@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<flow>
+    <state>
+        <name>job1.finish</name>
+        <todo>job2.submit</todo>
+        <start>yes</start>
+    </state>
+    <state>
+        <name>job2.finish</name>
+        <todo>job3.submit and job4.submit</todo>
+    </state>
+    <state>
+        <name>job3.percentage(80)</name>
+        <todo>job5.submit</todo>
+    </state>
+    <state>
+        <name>job4.percentage(80)</name>
+        <todo>job6.submit</todo>
+    </state>
+    <state>
+        <name>job5.finish and job6.finish</name>
+        <todo>job7.submit</todo>
+    </state>
+    <state>
+        <name>job7.has_def</name>
+        <todo>job1.submit</todo>
+    </state>
+    <state>
+        <name>job7.no_def</name>
+        <todo>END</todo>
+    </state>
+</flow>
