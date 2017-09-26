@@ -11,6 +11,7 @@ sub new {
     $job_config->{type} = $type;
     $job_config->{job} = $type->new();
     $job_config->{next} = {};
+    $job_config->{conditons} = [];
     #$job = $type->new();
     print "job_config: type is $job_config->{type}\n";
     bless $job_config, "JobConfig";

@@ -5,23 +5,26 @@ require "common.pm";
 package joba;
 
 sub new {
+    my $class = shift;
+    my $name = shift;
     my $job = {
-        "name" => "joba"
+        "type" => __PACKAGE__,
+        "name" => $name
     };
     print "joba is created\n";
-    bless $job, "joba";
+    bless $job, $class;
     return $job;
 }
 
 sub next {
     my $self = shift;
-    print "$self->{name} run next\n";
+    print "$self->{type} run next\n";
     return 1;
 }
 
 sub DESTROY {
     my $self = shift;
-    print "$self->{name} destroy\n";
+    print "$self->{type} destroy\n";
 }
 
 sub finish {

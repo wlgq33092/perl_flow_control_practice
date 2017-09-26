@@ -9,8 +9,9 @@ sub main {
 
     $flow->load_job("jobb");
     $flow->load_job("jobc");
+    $flow->build_jobs("/Users/wuge/my_practice/perl_practice/flow_control_practice/test1.xml");
     $flow->build_flow();
-    $flow->run();
+    #$flow->run();
 }
 
 &main;
