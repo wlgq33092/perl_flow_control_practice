@@ -5,28 +5,53 @@ require "common.pm";
 package jobb;
 
 sub new {
+    my $class = shift;
+    my $name = shift;
     my $job = {
-        "name" => "jobb"
+        "type" => __PACKAGE__,
+        "name" => $name
     };
-    print "$job->{name} is created\n";
-    bless $job, "jobb";
+    print "$class is created\n";
+    bless $job, $class;
     return $job;
 }
 
 sub next {
     my $self = shift;
-    print "$self->{name} run next\n";
+    print "$self->{type} run next\n";
     return 1;
 }
 
 sub DESTROY {
     my $self = shift;
-    print "$self->{name} destroy\n";
+    print "$self->{type} destroy\n";
 }
 
 sub finish {
     my $self = shift;
     return common::get_job_result($self->{name});
+}
+
+sub prepare {
+    return 1;
+}
+
+sub submit {
+    return 1;
+}
+
+sub percentage {
+    my $self = shift;
+    my $per = shift;
+    my $stage = shift;
+
+    print __PACKAGE__, "percentage $per stage $stage\n";
+
+    return 1;
+}
+
+sub done {
+    return 1;
 }
 
 1;

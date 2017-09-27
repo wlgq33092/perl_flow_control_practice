@@ -48,29 +48,18 @@ sub build_jobs {
     my $config_file = shift;
 
     my $xml = &main::XMLin($config_file);
-    LogUtil::dump("xml file:\n", %{$xml});
+    #LogUtil::dump("xml file:\n", $xml);
 
     my $jobs = $xml->{job};
-    print "$_:\n", &main::Dumper(%{$jobs->{$_}}) foreach (keys %{$jobs});
-    foreach my $job (keys %{$jobs}) {
-        print "job name is $job\n";
-        my $jobinfo = $jobs->{$job};
-        foreach my $key (keys %{$jobinfo}) {
-            print "stwu debug, print key and value: $key $jobinfo->{$key}\n";
-        }
-    }
-    #LogUtil::dump("jobs:\n", @jobs);
+
     foreach my $job_name (keys %{$jobs}) {
-        print "stwu debug: job name is $job_name\n";
         my $jobinfo = $jobs->{$job_name};
-        #print "stwu debug: ref type for jobinfo is ", ref $jobinfo, "\n";
-        #LogUtil::dump("\n", %{$jobinfo});
         unless (lc($job_name) eq "end") {
             my $job = JobConfig->new($jobinfo->{type});
             $job->{type} = $jobinfo->{type};
             $job->{conditions} = $jobinfo->{condition};
             $flow_jobs{$job_name} = $job;
-            LogUtil::dump("job $job_name:\n", %{$flow_jobs{$job_name}});
+            LogUtil::dump("job $job_name:\n", $flow_jobs{$job_name});
         }
     }
 }
@@ -108,9 +97,9 @@ sub run {
     my $flow_finish = 0;
     while (1) {
         my $has_next = 0;
-        LogUtil::dump("current job conf:\n", $cur_job_conf);
+        #LogUtil::dump("current job conf:\n", $cur_job_conf);
         my $conditions = $cur_job_conf->get_next_table();
-        LogUtil::dump("print conditions:\n", $conditions);
+        #LogUtil::dump("print conditions:\n", $conditions);
         foreach my $condition (keys %{$conditions}) {
             if ($cur_job->$condition()) {
                 my $next_job_name = $conditions->{$condition};

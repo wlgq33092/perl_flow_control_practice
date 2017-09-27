@@ -11,7 +11,7 @@ sub new {
         "type" => __PACKAGE__,
         "name" => $name
     };
-    print "joba is created\n";
+    print "$class is created\n";
     bless $job, $class;
     return $job;
 }
@@ -37,6 +37,16 @@ sub prepare {
 }
 
 sub submit {
+    return 1;
+}
+
+sub percentage {
+    my $self = shift;
+    my $per = shift;
+    my $stage = shift;
+
+    print __PACKAGE__, "percentage $per stage $stage\n";
+
     return 1;
 }
 

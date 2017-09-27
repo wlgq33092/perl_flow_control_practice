@@ -2,7 +2,7 @@
 
 require "common.pm";
 
-package jobc;
+package jobf;
 
 sub new {
     my $class = shift;
