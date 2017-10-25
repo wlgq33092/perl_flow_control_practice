@@ -4,6 +4,7 @@ use strict;
 use Data::Dumper;
 use Cwd;
 use XML::Simple;
+use flow_parser;
 
 require "job_config.pm";
 require "LogUtil.pm";
@@ -43,6 +44,14 @@ sub append_job {
     push $self->{"jobs"}, $job_module->new();
 }
 
+sub parse_condition {
+    my $condition = shift;
+    return "", "start" if $condition eq "start";
+    my @statement = split /\./, $condition;
+    LogUtil::dump("conditon:\n", \@statement);
+    return $statement[0], $statement[1];
+}
+
 sub build_jobs {
     my $self = shift;
     my $config_file = shift;
@@ -58,6 +67,9 @@ sub build_jobs {
             my $job = JobConfig->new($jobinfo->{type});
             $job->{type} = $jobinfo->{type};
             $job->{conditions} = $jobinfo->{condition};
+            foreach my $condition (@{$job->{conditions}}) {
+                my ($cond_jn, $cond_func) = parse_condition($condition);
+            }
             $flow_jobs{$job_name} = $job;
             LogUtil::dump("job $job_name:\n", $flow_jobs{$job_name});
         }

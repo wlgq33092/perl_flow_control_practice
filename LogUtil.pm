@@ -17,4 +17,28 @@ sub dump {
     }
 }
 
+sub print_hash {
+    my $my_hash = shift;
+    my $name = shift;
+    my %target = %{$my_hash};
+
+    print "print hash $name start:\n";
+    foreach my $key (keys %target) {
+        print "key is $key, value is $target{$key}\n";
+    }
+    print "print hash $name end.\n";
+}
+
+sub print_array {
+    my $my_array = shift;
+    my $name = shift;
+    my @target = @{$my_array};
+
+    print "print array $name start:\n";
+    foreach my $item (@target) {
+        print "$item\n";
+    }
+    print "print array $name end.\n";
+}
+
 1;
