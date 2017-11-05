@@ -20,7 +20,10 @@ my %flow_jobs = ();
 
 sub new {
     my $flow = {
-        "name" => "flow"
+        "name"  => "flow",
+        "jobs_config"  => [],
+        "types" => [],
+        "jobs"  => {}
     };
     bless $flow, "Flow";
     return $flow;
@@ -29,13 +32,15 @@ sub new {
 sub load_job {
     my $self = shift;
     my $job_module = shift;
+    my $name = shift;
+    my $job_config = shift;
     #$job_module = "JOB::" . $job_module;
     my $job_module_file = $job_module . ".pm";
     print "Flow, load_job, job_module is $job_module\n";
 
     require $job_module_file;
 
-    return $job_module->new();
+    return $job_module->new($name, $job_config);
 }
 
 sub append_job {
@@ -56,23 +61,17 @@ sub build_jobs {
     my $self = shift;
     my $config_file = shift;
 
-    my $xml = &main::XMLin($config_file);
-    #LogUtil::dump("xml file:\n", $xml);
+    my $parser = flow_parser->new($config_file);
+    $self->{jobs_config} = $parser->parse();
+    LogUtil::dump("build jobs, job config:\n", $self->{jobs_config});
 
-    my $jobs = $xml->{job};
-
-    foreach my $job_name (keys %{$jobs}) {
-        my $jobinfo = $jobs->{$job_name};
-        unless (lc($job_name) eq "end") {
-            my $job = JobConfig->new($jobinfo->{type});
-            $job->{type} = $jobinfo->{type};
-            $job->{conditions} = $jobinfo->{condition};
-            foreach my $condition (@{$job->{conditions}}) {
-                my ($cond_jn, $cond_func) = parse_condition($condition);
-            }
-            $flow_jobs{$job_name} = $job;
-            LogUtil::dump("job $job_name:\n", $flow_jobs{$job_name});
-        }
+    foreach my $job_config (@{$self->{jobs_config}}) {
+        my $job_type = $job_config->{type};
+        my $job_name = $job_config->{name};
+        print "build jobs: job type is $job_type\n";
+        my $job = $self->load_job($job_type, $job_name, $job_config);
+        $self->{jobs}->{$job_name} = $job;
+        $job->next();
     }
 }
 
@@ -101,6 +100,10 @@ sub build_flow {
 sub run {
     my $self = shift;
     my %obj = %{$self};
+
+    my $xml1 = "/Users/wuge/my_practice/perl_practice/flow_control_practice/test1.xml";
+    my $parser = flow_parser->new($xml1);
+    my $jobs = $parser->parse();
 
     my $cur_job_conf = $flow_jobs{"start"};
     my $job_type = $cur_job_conf->{type};

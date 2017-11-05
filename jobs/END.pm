@@ -2,7 +2,7 @@
 
 require "common.pm";
 
-package jobd;
+package END;
 
 sub new {
     my $class = shift;
@@ -24,7 +24,7 @@ sub next {
 
     print "$self->{type} run next\n";
     my $nexts = $job_config->{next};
-    LogUtil::dump("job $name of type $self->{type} next:\n", $nexts);
+    LogUtil::dump("job $self->{name} of type $self->{type} next:\n", $nexts);
     return 1;
 }
 

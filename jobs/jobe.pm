@@ -7,9 +7,11 @@ package jobe;
 sub new {
     my $class = shift;
     my $name = shift;
+    my $job_config = shift;
     my $job = {
         "type" => __PACKAGE__,
-        "name" => $name
+        "name" => $name,
+        "config" => $job_config
     };
     print "$class is created\n";
     bless $job, $class;
@@ -18,7 +20,11 @@ sub new {
 
 sub next {
     my $self = shift;
+    my $job_config = $self->{config};
+
     print "$self->{type} run next\n";
+    my $nexts = $job_config->{next};
+    LogUtil::dump("job $name of type $self->{type} next:\n", $nexts);
     return 1;
 }
 
