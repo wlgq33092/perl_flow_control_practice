@@ -4,6 +4,7 @@ use strict;
 use Data::Dumper;
 use Cwd;
 use XML::Simple;
+
 use flow_parser;
 
 require "job_config.pm";
@@ -63,38 +64,16 @@ sub build_jobs {
 
     my $parser = flow_parser->new($config_file);
     $self->{jobs_config} = $parser->parse();
-    LogUtil::dump("build jobs, job config:\n", $self->{jobs_config});
+    #LogUtil::dump("build jobs, job config:\n", $self->{jobs_config});
 
     foreach my $job_config (@{$self->{jobs_config}}) {
-        my $job_type = $job_config->{type};
-        my $job_name = $job_config->{name};
-        print "build jobs: job type is $job_type\n";
+        my $job_type = $job_config->{type}[0];
+        my $job_name = $job_config->{name}[0];
+        #print "build jobs: job type is $job_type\n";
         my $job = $self->load_job($job_type, $job_name, $job_config);
         $self->{jobs}->{$job_name} = $job;
         $job->next();
     }
-}
-
-sub build_flow {
-    my $self = shift;
-    $self->{start} = "job1";
-
-    my $job1 = JobConfig->new("joba");
-    my $job2 = JobConfig->new("jobb");
-    my $job3 = JobConfig->new("jobc");
-
-    $job1->insert_next_table("finish", "job2");
-    $job2->insert_next_table("finish", "job3");
-    $job3->insert_next_table("finish", "END");
-
-    %flow_jobs = (
-        "start" => $job1,
-        "job1"  => $job1,
-        "job2"  => $job2,
-        "job3"  => $job3
-    );
-
-    print "build_flow finish\n";
 }
 
 sub run {
@@ -103,39 +82,44 @@ sub run {
 
     my $xml1 = "/Users/wuge/my_practice/perl_practice/flow_control_practice/test1.xml";
     my $parser = flow_parser->new($xml1);
-    my $jobs = $parser->parse();
+    #my $jobs = $parser->parse();
+    my $jobs = $self->{jobs_config};
 
-    my $cur_job_conf = $flow_jobs{"start"};
-    my $job_type = $cur_job_conf->{type};
-    print "run, job_type is $job_type\n";
-    my $cur_job = $job_type->new();
-    my $flow_finish = 0;
+    my @running_jobs = ();
+    my @ready_jobs = ();
+    foreach my $job (@{$jobs}) {
+        push @ready_jobs, $job if $job->{depend}->[0] eq "start";
+    }
+    LogUtil::dump("start, ready jobs:\n", \@ready_jobs);
     while (1) {
-        my $has_next = 0;
-        #LogUtil::dump("current job conf:\n", $cur_job_conf);
-        my $conditions = $cur_job_conf->get_next_table();
-        #LogUtil::dump("print conditions:\n", $conditions);
-        foreach my $condition (keys %{$conditions}) {
-            if ($cur_job->$condition()) {
-                my $next_job_name = $conditions->{$condition};
-                LogUtil::dump("next job name:\n", $next_job_name);
-                if ($next_job_name eq "END") {
-                    $flow_finish = 1;
-                    last;
+        # run jobs here
+        # first, prepare a job, then submit it,
+        # then wait it run to done
+        foreach my $job (@ready_jobs) {
+            my $job_name = $job->{name}->[0];
+            my $ready_job = $self->{jobs}->{$job_name};
+            $ready_job->prepare();
+            my $submit_success = $ready_job->submit();
+            die "submit job failed, flow exit.\n" unless $submit_success;
+            push @running_jobs, $ready_job;
+        }
+        @ready_jobs = ();
+
+        last if @running_jobs == 0;
+        my @finished = ();
+        for (my $i = 0; $i < @running_jobs; $i = $i + 1) {
+            my $running_job = $running_jobs[$i];
+            if ($running_job->finish()) {
+                #splice @running_jobs, $i, 1;
+                push @finished, $i;
+                my $nexts = $running_job->{config}->{next}->{finish};
+                LogUtil::dump("running jobs, nexts:\n", $nexts);
+                foreach my $next (@{$nexts}) {
+                    push @ready_jobs, $self->{jobs}->{$next};
                 }
-                $cur_job_conf = $flow_jobs{$next_job_name};
-                $has_next = 1;
-                last;
             }
         }
-        if ($flow_finish) {
-            print "flow run to done.\n";
-            last;
-        }
-        if (0 == $has_next) {
-            print "job abort before flow run to done\n";
-            last;
-        }
+        #last;
     }
 }
 

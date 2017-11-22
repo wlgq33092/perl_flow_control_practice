@@ -8,6 +8,7 @@ sub main {
     my $flow = Flow->new;
     my $xml1 = "/Users/wuge/my_practice/perl_practice/flow_control_practice/test1.xml";
     $flow->build_jobs($xml1);
+    $flow->run();
 }
 
 &main;

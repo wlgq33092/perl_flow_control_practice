@@ -41,4 +41,36 @@ sub print_array {
     print "print array $name end.\n";
 }
 
+
+package LogJob;
+
+sub new {
+    my $class = shift;
+    my $file = shift;
+
+    my $obj = {
+        "file" => $file
+    };
+
+    my $fd;
+    open($fd, ">$file") || die "Create job log error.\n";
+
+    $obj->{handler} = $fd;
+
+    bless $obj, $class;
+}
+
+sub log_print {
+    my $self = shift;
+    my $msg = shift;
+    my $fd = $self->{handler};
+
+    print $fd $msg;
+}
+
+sub DESTROY {
+    my $self = shift;
+    close($self->{handler});
+}
+
 1;

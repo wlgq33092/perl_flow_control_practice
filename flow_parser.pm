@@ -38,10 +38,17 @@ sub parse {
         }
         #LogUtil::dump("job $job->{name}:\n", $job);
         push @jobs, $job;
-        $name2job{$job->{name}} = $job;
+        foreach my $key (keys %{$item}) {
+            next if $key eq "condition";
+            $job->{$key} = $item->{$key};
+        }
+
+        $name2job{$job->{name}->[0]} = $job;
     }
 
     #LogUtil::dump("self opts:\n", $self->{opts});
+
+    # get next here
     foreach my $item (@jobs) {
         my $depends = $item->{depend};
         my $type = $item->{type};
@@ -49,13 +56,17 @@ sub parse {
             #print "depend_str is $depend_str\n";
             my @depend_array = split /\s+(and|or)\s+/, $depend_str;
             foreach my $depend (@depend_array) {
-                #print "depend is $depend\n";
+                print "depend is $depend\n";
                 if (grep /^$depend$/, @{$self->{opts}}) {
                     print "get opts $depend, ignore it.\n";
                 } elsif ($depend =~ /^*.*$/) {
                     my ($name, $cond) = split /\./, $depend;
-                    #print "get depend str: name is $name, cond is $cond\n";
-                    $name2job{$name}->{next}->{$cond} = $item->{name};
+                    print "get $item->{name}->[0] depend str: name is $name, cond is $cond\n";
+                    unless (exists $name2job{$name}->{next}->{$cond}) {
+                        $name2job{$name}->{next}->{$cond}->[0] = $item->{name}->[0];
+                    } else {
+                        push $name2job{$name}->{next}->{$cond}, $item->{name}->[0];
+                    }
                 } else {
                     die "invalid depend str $depend, please check the flow.xml file.\n";
                 }
@@ -64,7 +75,7 @@ sub parse {
     }
 
     foreach my $job (@jobs) {
-        #LogUtil::dump("job $job->{name}:\n", $job);
+        LogUtil::dump("job $job->{name}[0]:\n", $job);
     }
 
     return \@jobs;

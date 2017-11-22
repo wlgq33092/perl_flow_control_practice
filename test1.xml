@@ -5,6 +5,7 @@
         <type>joba</type>
         <condition>start</condition>
         <condition>job7.has_defect</condition>
+        <myboy>yes</myboy>
     </job>
     <job>
         <name>job2</name>

@@ -22,9 +22,9 @@ sub next {
     my $self = shift;
     my $job_config = $self->{config};
 
-    print "$self->{type} run next\n";
+    #print "$self->{type} run next\n";
     my $nexts = $job_config->{next};
-    LogUtil::dump("job $name of type $self->{type} next:\n", $nexts);
+    LogUtil::dump("job $self->{name} of type $self->{type} next:\n", $nexts);
     return 1;
 }
 
@@ -35,14 +35,20 @@ sub DESTROY {
 
 sub finish {
     my $self = shift;
-    return common::get_job_result($self->{name});
+    #return common::get_job_result($self->{name});
+    return common::run_to_done($self->{pid});
 }
 
 sub prepare {
+    my $self = shift;
+    print "run job type: $self->{type}, name: $self->{name} prepare.\n";
     return 1;
 }
 
 sub submit {
+    my $self = shift;
+    my $name = $self->{name};
+    common::async_run("test.sh 5 $name");
     return 1;
 }
 
