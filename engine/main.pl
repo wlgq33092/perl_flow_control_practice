@@ -3,6 +3,10 @@
 require "Flow.pm";
 require "flow_parser.pm";
 
+unshift @INC ../;
+unshift @INC ../parser;
+unshift @INC ../utils;
+
 sub main {
     print "main\n";
     my $flow = Flow->new;
