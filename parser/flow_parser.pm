@@ -2,7 +2,33 @@
 
 use XML::Simple;
 
-package flow_parser;
+package FlowParser;
+
+sub new {
+    my $class = shift;
+
+    my $cmdline_parser = &CMDLineParser::new;
+    my $flowxml_parser = &FlowXMLParser::new;
+
+    my $parser = {
+        "cmdline" => $cmdline_parser,
+        "flowxml" => $flowxml_parser;
+    }
+
+    bless $parser, $class;
+    return $parser;
+}
+
+sub parse {
+    my $parser_res = &ParserResult::new;
+    
+}
+
+package CMDLineParser;
+
+package PJCParser;
+
+package FlowXMLParser;
 
 sub new {
     my $class = shift;
