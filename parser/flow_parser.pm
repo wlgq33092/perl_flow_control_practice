@@ -2,6 +2,7 @@
 
 use strict;
 use XML::Simple;
+use Text::ParseWords;
 use Getopt::Long qw(:config no_ignore_case);
 
 package FlowParser;
@@ -21,7 +22,9 @@ sub new {
 
 sub parse {
     my $self = shift;
-    my $parser_res = &ParserResult::new;
+
+    require "parser_result.pm";
+    my $parser_res = ParserResult->new;
 
     # run command line parser first
     my $cmdline_parser = $self->{cmdline};
@@ -36,8 +39,9 @@ sub parse {
     }
 
     # run flow.xml parser
+    my $test_res = $cmdline_res->has_flowxml();
     die "Don't have flow.xml path, flow will exit.\n"
-        unless exists $cmdline_res->get_flowxml();
+        unless $cmdline_res->has_flowxml();
     my $flowxml_parser = FlowXMLParser->new($cmdline_res->get_flowxml());
     my $flowxml_res = $flowxml_parser->parse();
     $parser_res->set_res("flowxml_res", $flowxml_res);
@@ -45,16 +49,16 @@ sub parse {
     return $parser_res;
 }
 
+
+
 package CMDLineParser;
 
 sub new {
     my $class = shift;
-    my $args_ref = shift; # just pass @ARGV here
-    my @opt_list = ("O=s", "C=i", "P=i");
+    my @opt_list = ("O=s", "C=i", "P=i", "d=s", "T=s");
 
     my $parser = {
-        "args" => $args_ref,
-        "opts" => \@opt_list
+        opts => \@opt_list
     };
 
     bless $parser, $class;
@@ -63,11 +67,10 @@ sub new {
 
 sub parse {
     my $self = shift;
-    my @args = @{$self->{args}};
     my @opt_list = @{$self->{opts}};
 
     my %opts;
-    my $ret = GetOptionsFromArray(\@args, \%opts, \@opt_list);
+    my $ret = &main::GetOptions(\%opts, @opt_list);
     die "Parse command line error, flow will exit.\n" unless $ret;
 
     return CMDLineResult->new(\%opts);
@@ -94,8 +97,8 @@ sub parse {
     my $line;
     open FH, "<$path";
     while ($line = <FH>) {
-        my @words = quotewords("=", 0, $line);
-        %opts{$words[0]} = $words[1];
+        my @pair = &main::quotewords("=", 0, $line);
+        $opts{$pair[0]} = $pair[1];
     }
     close FH;
 
@@ -120,65 +123,14 @@ sub new {
 
 sub parse {
     my $self = shift;
-    my @jobs;
-    my %name2job;
     my $xml = &main::XMLin($self->{config_file}, ForceArray => 1);
-    my $job_items = $xml->{job};
-    my @types;
-    #LogUtil::dump("flow is:\n", $jobs);
-    foreach my $item (@{$job_items}) {
-        my $job = {
-            "name"   => $item->{name}->[0],
-            "type"   => $item->{type}->[0],
-            "depend" => [],
-            "next"   => {}
-        };
-        foreach my $condition (@{$item->{condition}}) {
-            push $job->{depend}, $condition;
-        }
-        #LogUtil::dump("job $job->{name}:\n", $job);
-        push @jobs, $job;
-        foreach my $key (keys %{$item}) {
-            next if $key eq "condition";
-            $job->{$key} = $item->{$key};
-        }
+    # my $xml = &main::XMLin($self->{config_file});
 
-        $name2job{$job->{name}->[0]} = $job;
-    }
+    LogUtil::dump("xml parser:\n", $xml);
+    my $flowxml_res = FlowXMLResult->new($xml);
 
-    #LogUtil::dump("self opts:\n", $self->{opts});
-
-    # get next here
-    foreach my $item (@jobs) {
-        my $depends = $item->{depend};
-        my $type = $item->{type};
-        foreach my $depend_str (@{$depends}) {
-            #print "depend_str is $depend_str\n";
-            my @depend_array = split /\s+(and|or)\s+/, $depend_str;
-            foreach my $depend (@depend_array) {
-                print "depend is $depend\n";
-                if (grep /^$depend$/, @{$self->{opts}}) {
-                    print "get opts $depend, ignore it.\n";
-                } elsif ($depend =~ /^*.*$/) {
-                    my ($name, $cond) = split /\./, $depend;
-                    print "get $item->{name}->[0] depend str: name is $name, cond is $cond\n";
-                    unless (exists $name2job{$name}->{next}->{$cond}) {
-                        $name2job{$name}->{next}->{$cond}->[0] = $item->{name}->[0];
-                    } else {
-                        push $name2job{$name}->{next}->{$cond}, $item->{name}->[0];
-                    }
-                } else {
-                    die "invalid depend str $depend, please check the flow.xml file.\n";
-                }
-            }
-        }
-    }
-
-    foreach my $job (@jobs) {
-        LogUtil::dump("job $job->{name}[0]:\n", $job);
-    }
-
-    return \@jobs;
+    return $flowxml_res;
 }
+
 
 1;

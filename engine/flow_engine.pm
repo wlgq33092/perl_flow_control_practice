@@ -9,65 +9,61 @@ use flow_parser;
 
 require "job_config.pm";
 require "LogUtil.pm";
+require "engine_builder.pm";
+require "flow_parser.pm";
 
 package FlowEngine;
 
 sub new {
+    my $class = shift;
+    my $config = shift;
+    my $flow_log = shift;
     my $flow = {
-        "name"  => "flow",
-        "jobs_config"  => [],
-        "types" => [],
-        "jobs"  => {}
+        config => $config,
+        log    => $flow_log
     };
+
+    my $jobtype = $config->get_cmdline_result()->get_T();
+    $flow_log->log_print("Flow job type is $jobtype.\n");
+    my $engine_builder = EngineKernelBuilder->new($jobtype);
+    $flow->{engine} = $engine_builder->build($config, $flow_log);
+    $flow->{job_builder} = EngineJobBuilder->new();
+
     bless $flow, __PACKAGE__;
     return $flow;
 }
 
 sub run {
     my $self = shift;
-    my %obj = %{$self};
 
-    my $xml1 = "/Users/wuge/my_practice/perl_practice/flow_control_practice/test1.xml";
-    my $parser = flow_parser->new($xml1);
-    #my $jobs = $parser->parse();
-    my $jobs = $self->{jobs_config};
+    # run engine kernel
+    my $engine = $self->{engine};
+    $engine->run($self->{name2job}, $self->{config});
+}
 
-    my @running_jobs = ();
-    my @ready_jobs = ();
-    foreach my $job (@{$jobs}) {
-        push @ready_jobs, $job if $job->{depend}->[0] eq "start";
+sub build_jobs {
+    my $self = shift;
+
+    my $flow_result = $self->{config}->get_flowxml_result();
+    my $jobs_conf = $flow_result->get_all_jobs_conf();
+    my $start_jobs = $flow_result->get_start_jobs();
+    my %name2job;
+    my $builder = $self->{job_builder};
+    foreach my $job_conf (@{$jobs_conf}) {
+        #LogUtil::dump("build job, job conf:\n", $job_conf);
+        # my $job = $builder->build_job($job_conf->{type}, $job_conf->{name}, $self->{config});
+        my $job = $builder->build_job($job_conf->{type}, $job_conf->{name}, $job_conf);
+        #LogUtil::dump("after building:\n", $job);
+        print "job name after building is: $job_conf->{name}\n";
+        $name2job{$job_conf->{name}} = $job;
     }
-    LogUtil::dump("start, ready jobs:\n", \@ready_jobs);
-    while (1) {
-        # run jobs here
-        # first, prepare a job, then submit it,
-        # then wait it run to done
-        foreach my $job (@ready_jobs) {
-            my $job_name = $job->{name}->[0];
-            my $ready_job = $self->{jobs}->{$job_name};
-            $ready_job->prepare();
-            my $submit_success = $ready_job->submit();
-            die "submit job failed, flow exit.\n" unless $submit_success;
-            push @running_jobs, $ready_job;
-        }
-        @ready_jobs = ();
 
-        last if @running_jobs == 0;
-        my @finished = ();
-        for (my $i = 0; $i < @running_jobs; $i = $i + 1) {
-            my $running_job = $running_jobs[$i];
-            if ($running_job->finish()) {
-                #splice @running_jobs, $i, 1;
-                push @finished, $i;
-                my $nexts = $running_job->{config}->{next}->{finish};
-                LogUtil::dump("running jobs, nexts:\n", $nexts);
-                foreach my $next (@{$nexts}) {
-                    push @ready_jobs, $self->{jobs}->{$next};
-                }
-            }
-        }
-        #last;
-    }
+    # build DONE job
+    my $DONE_job = $builder->build_job("DONE", "DONE", $self->{config});
+    $name2job{DONE} = $DONE_job;
+
+    $self->{name2job} = \%name2job;
+    LogUtil::dump("name2job after build:\n", $self->{name2job});
 }
 
 sub DESTROY {

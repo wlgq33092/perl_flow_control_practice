@@ -9,9 +9,10 @@ sub new {
     my $name = shift;
     my $job_config = shift;
     my $job = {
-        "type" => __PACKAGE__,
-        "name" => $name,
-        "config" => $job_config
+        type   => __PACKAGE__,
+        name   => $name,
+        config => $job_config,
+        done   => 0
     };
     print "$class is created\n";
     my $log_file = "./test/$name" . ".log";
@@ -37,10 +38,8 @@ sub DESTROY {
     $log->log_print("$self->{type} destroy\n");
 }
 
-sub finish {
-    my $self = shift;
-    return common::get_job_result($self->{name});
-    #return common::run_to_done($self->{pid});
+sub abort {
+    return 0;
 }
 
 sub prepare {
@@ -53,9 +52,24 @@ sub prepare {
 sub submit {
     my $self = shift;
     my $name = $self->{name};
-    common::async_run("test.sh 5 $name");
+    $self->{pid} = common::async_run("../test.sh 5 $name");
     return 1;
 }
+
+sub finish {
+    my $self = shift;
+
+    if ($self->{done} == 1) {
+        return 1;
+    }
+
+    my $pid = $self->{pid};
+    print "check if done: pid is $self->{pid}, my pid is $pid\n";
+    $self->{done} = common::run_to_done($pid);
+
+    return $self->{done};
+}
+
 
 sub percentage {
     my $self = shift;

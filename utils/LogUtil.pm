@@ -58,6 +58,7 @@ sub new {
     $obj->{handler} = $fd;
 
     bless $obj, $class;
+    return $obj;
 }
 
 sub log_print {
@@ -66,6 +67,39 @@ sub log_print {
     my $fd = $self->{handler};
 
     print $fd $msg;
+}
+
+sub DESTROY {
+    my $self = shift;
+    close($self->{handler});
+}
+
+package LogFlow;
+
+sub new {
+    my $class = shift;
+    my $file = shift;
+
+    my $obj = {
+        "file" => $file
+    };
+
+    my $fd;
+    open($fd, ">$file") || die "Create flow log error.\n";
+
+    $obj->{handler} = $fd;
+
+    bless $obj, $class;
+    return $obj;
+}
+
+sub log_print {
+    my $self = shift;
+    my $msg = shift;
+    my $fd = $self->{handler};
+
+    print $msg;
+    #print $fd $msg;
 }
 
 sub DESTROY {

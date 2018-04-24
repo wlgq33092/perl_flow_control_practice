@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<FMO>
+    <flow>
+        <start>
+            <name>script1</name>
+        </start>
+        <job>
+            <name>script1</name>
+            <next>switcher1</next>
+        </job>
+        <switcher>
+            <name>switcher1</name>
+            <condition>script1.is_my_job</condition>
+            <caseY>DONE</caseY>
+            <caseN></caseN>
+        </switcher>
+    </flow>
+    <jobs>
+        <job>
+            <name>script1</name>
+            <type>ScriptJob</type>
+            <owner>anna</owner>
+        </job>
+    </jobs>
+</FMO>

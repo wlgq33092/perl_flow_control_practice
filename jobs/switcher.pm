@@ -1,8 +1,16 @@
 #! /usr/bin/perl
 
-require "common.pm";
+use strict;
+use Component;
 
-package jobd;
+require "common.pm";
+require "Component.pm";
+require "LogUtil.pm";
+require Exporter;
+
+package switcher;
+
+our @ISA = qw/Component/;
 
 sub new {
     my $class = shift;
@@ -12,9 +20,10 @@ sub new {
         type   => __PACKAGE__,
         name   => $name,
         config => $job_config,
-        done   => 0
+        YES     => 0
     };
-    print "$class is created\n";
+
+    print "$class is created, condition is $job_config->{condition}\n";
     my $log_file = "./test/$name" . ".log";
     my $log = LogJob->new($log_file);
     $job->{log} = $log;
@@ -24,12 +33,15 @@ sub new {
 
 sub next {
     my $self = shift;
-    my $job_config = $self->{config};
+    my $config = $self->{config};
 
-    #print "$self->{type} run next\n";
-    my $nexts = $job_config->{next};
-    LogUtil::dump("job $self->{name} of type $self->{type} next:\n", $nexts);
-    return 1;
+    print "switcher next: $config->{caseY}, $config->{caseN}\n";
+
+    if ($self->{YES} == 1) {
+        return $config->{caseY};
+    } else {
+        return $config->{caseN};
+    }
 }
 
 sub DESTROY {
@@ -51,25 +63,25 @@ sub prepare {
 
 sub submit {
     my $self = shift;
-    my $name = $self->{name};
-    $self->{pid} = common::async_run("../test.sh 5 $name");
+    # my $name = $self->{name};
+    # $self->{pid} = common::async_run("../test.sh 5 $name");
     return 1;
 }
 
 sub finish {
     my $self = shift;
 
-    if ($self->{done} == 1) {
-        return 1;
-    }
+    return 1 if $self->{YES} == 1;
 
-    my $pid = $self->{pid};
-    print "check if done: pid is $self->{pid}, my pid is $pid\n";
-    $self->{done} = common::run_to_done($pid);
+    my $config = $self->{config};
+    my $condition = $config->{condition};
 
-    return $self->{done};
+    print "switcher: $self->{name}, condition is $condition.\n";
+
+    # $self->{YES} = $self->SUPER::check_condition($condition);
+    $self->{YES} = Component::check_condition($self, $condition);
+    return $self->{YES};
 }
-
 
 sub percentage {
     my $self = shift;

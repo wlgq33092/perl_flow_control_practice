@@ -4,6 +4,36 @@ use POSIX qw(:sys_wait_h);
 
 package common;
 
+my $config;
+my $name2job;
+
+sub set_config {
+    $config = $_[0];
+}
+
+sub set_jobs {
+    $name2job = shift;
+}
+
+sub run_condition {
+    my $job_name = shift;
+    my $condition = shift;
+    my @args = @_;
+
+    print "stwu run condition args: $_\n" foreach (@args);
+    print "run condition:\n";
+    print "job name: $job_name, condition: $condition, args: @args.\n";
+
+    my $job = $name2job->{$job_name};
+
+    my $jobtype = $job->{type};
+    my $module = $jobtype . ".pm";
+
+    require $module;
+
+    return $job->$condition(@args);
+}
+
 my $job_result = {
     "joba" => 1,
     "jobb" => 1,
@@ -37,8 +67,11 @@ sub get_def_count {
 sub run_to_done {
     my $pid = shift;
     my $ret = waitpid($pid, WNOHANG);
-    return 1 if $pid == $ret;
-    return 0 if -1 == $ret;
+    if ($pid == $ret) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 sub async_run {
@@ -53,6 +86,12 @@ sub async_run {
     } else {
         print "Fork child process for async run error.\n";
     }
+}
+
+package TfelxCommon;
+
+sub submitjob {
+
 }
 
 1;

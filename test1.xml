@@ -1,45 +1,28 @@
 <?xml version="1.0" ?>
-<flow>
-    <job>
-        <name>job1</name>
-        <type>joba</type>
-        <condition>start</condition>
-        <condition>job7.has_defect</condition>
-        <myboy>yes</myboy>
-    </job>
-    <job>
-        <name>job2</name>
-        <type>jobb</type>
-        <condition>job1.finish</condition>
-    </job>
-    <job>
-        <name>job3</name>
-        <type>jobc</type>
-        <condition>job2.finish</condition>
-    </job>
-    <job>
-        <name>job4</name>
-        <type>jobb</type>
-        <condition>job2.finish</condition>
-    </job>
-    <job>
-        <name>job5</name>
-        <type>joba</type>
-        <condition>job3.percentage(80, 1)</condition>
-    </job>
-    <job>
-        <name>job6</name>
-        <type>joba</type>
-        <condition>job4.percentage(80, 1)</condition>
-    </job>
-    <job>
-        <name>job7</name>
-        <type>jobb</type>
-        <condition>job5.finish and job6.finish</condition>
-    </job>
-    <job>
-        <name>END</name>
-        <type>END</type>
-        <condition>job7.no_defect</condition>
-    </job>
-</flow>
+<FMO>
+    <flow>
+        <start>
+            <name>job1</name>
+        </start>
+        <job>
+            <name>job1</name>
+            <next>job2</next>
+            <next>job5</next>
+        </job>
+    </flow>
+    <jobs>
+        <job>
+            <name>job1</name>
+            <type>joba</type>
+            <lua_replace>
+                <lua_rep1>lua_rep1</lua_rep1>
+                <lua_rep_array1>
+                    <lua_rep_2>lua_rep2_1</lua_rep_2>
+                    <lua_rep_2>lua_rep2_2</lua_rep_2>
+                    <lua_rep_2>lua_rep2_3</lua_rep_2>
+                    <lua_rep_3>lua_rep3</lua_rep_3>
+                </lua_rep_array1>
+            </lua_replace>
+        </job>
+    </jobs>
+</FMO>

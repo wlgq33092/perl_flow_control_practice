@@ -1,0 +1,24 @@
+namespace : %
+    classes : %
+    functions : @
+        py_finish
+        py_setup
+        py_submit
+filtered : <<EOV
+
+import os;
+
+def py_setup(name):
+    print "set up job " + name + " success"
+    os.system("echo hello")
+    return 1
+
+def py_submit(name):
+    print "submit python job " + name + " success."
+    return 1
+
+def py_finish():
+    print "python job finish."
+    return 1
+
+EOV

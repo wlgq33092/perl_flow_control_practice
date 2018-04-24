@@ -2,7 +2,7 @@
 
 require "common.pm";
 
-package jobd;
+package jobpy;
 
 sub new {
     my $class = shift;
@@ -44,30 +44,18 @@ sub abort {
 
 sub prepare {
     my $self = shift;
-    my $log = $self->{log};
-    $log->log_print("run job type: $self->{type}, name: $self->{name} prepare.\n");
-    return 1;
+    my $name = $self->{name};
+    return py_setup($name);
 }
 
 sub submit {
     my $self = shift;
     my $name = $self->{name};
-    $self->{pid} = common::async_run("../test.sh 5 $name");
-    return 1;
+    return py_submit($name);
 }
 
 sub finish {
-    my $self = shift;
-
-    if ($self->{done} == 1) {
-        return 1;
-    }
-
-    my $pid = $self->{pid};
-    print "check if done: pid is $self->{pid}, my pid is $pid\n";
-    $self->{done} = common::run_to_done($pid);
-
-    return $self->{done};
+    return py_finish();
 }
 
 
@@ -86,5 +74,24 @@ sub percentage {
 sub done {
     return 1;
 }
+
+use Inline Python => << "END_OF_PYTHON_CODE";
+
+import os;
+
+def py_setup(name):
+    print "set up job " + name + " success"
+    os.system("echo hello")
+    return 1
+
+def py_submit(name):
+    print "submit python job " + name + " success."
+    return 1
+
+def py_finish():
+    print "python job finish."
+    return 1
+
+END_OF_PYTHON_CODE
 
 1;

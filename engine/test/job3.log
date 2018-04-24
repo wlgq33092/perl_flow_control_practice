@@ -1,0 +1,2 @@
+run job type: jobc, name: job3 prepare.
+jobc destroy

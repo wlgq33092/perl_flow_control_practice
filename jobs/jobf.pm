@@ -9,11 +9,15 @@ sub new {
     my $name = shift;
     my $job_config = shift;
     my $job = {
-        "type" => __PACKAGE__,
-        "name" => $name,
-        "config" => $job_config
+        type   => __PACKAGE__,
+        name   => $name,
+        config => $job_config,
+        done   => 0
     };
     print "$class is created\n";
+    my $log_file = "./test/$name" . ".log";
+    my $log = LogJob->new($log_file);
+    $job->{log} = $log;
     bless $job, $class;
     return $job;
 }
@@ -30,34 +34,51 @@ sub next {
 
 sub DESTROY {
     my $self = shift;
-    print "$self->{type} destroy\n";
+    my $log = $self->{log};
+    $log->log_print("$self->{type} destroy\n");
 }
 
-sub finish {
-    my $self = shift;
-    #return common::get_job_result($self->{name});
-    return common::run_to_done($self->{pid});
+sub abort {
+    return 0;
 }
 
 sub prepare {
     my $self = shift;
-    print "run job type: $self->{type}, name: $self->{name} prepare.\n";
+    my $log = $self->{log};
+    $log->log_print("run job type: $self->{type}, name: $self->{name} prepare.\n");
     return 1;
 }
 
 sub submit {
     my $self = shift;
     my $name = $self->{name};
-    common::async_run("test.sh 5 $name");
+    $self->{pid} = common::async_run("../test.sh 5 $name");
     return 1;
 }
+
+sub finish {
+    my $self = shift;
+
+    if ($self->{done} == 1) {
+        return 1;
+    }
+
+    my $pid = $self->{pid};
+    print "check if done: pid is $self->{pid}, my pid is $pid\n";
+    $self->{done} = common::run_to_done($pid);
+
+    return $self->{done};
+}
+
 
 sub percentage {
     my $self = shift;
     my $per = shift;
     my $stage = shift;
 
-    print __PACKAGE__, "percentage $per stage $stage\n";
+    my $log = $self->{log};
+
+    $log->log_print("percentage $per stage $stage\n");
 
     return 1;
 }

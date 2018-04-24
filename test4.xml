@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<FMO>
+    <flow>
+        <start>
+            <name>job1</name>
+        </start>
+        <job>
+            <name>job1</name>
+            <next>job2</next>
+        </job>
+        <job>
+            <name>job2</name>
+            <next>job3</next>
+        </job>
+        <job>
+            <name>job3</name>
+            <next>DONE</next>
+        </job>
+    </flow>
+    <jobs>
+        <job>
+            <name>job1</name>
+            <type>joba</type>
+        </job>
+        <job>
+            <name>job2</name>
+            <type>jobb</type>
+        </job>
+        <job>
+            <name>job3</name>
+            <type>jobc</type>
+        </job>
+    </jobs>
+</FMO>

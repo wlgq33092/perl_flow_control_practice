@@ -1,0 +1,6 @@
+./flow_main.pl -P 1 -O pjc=/Users/wuge/my_practice/perl_practice/flow_control_practice/test/pjc.txt,flowxml=/Users/wuge/my_practice/perl_practice/flow_control_practice/test2.xml
+
+
+./flow_main.pl -P 1 -T FMO -O pjc=/Users/wuge/my_practice/perl_practice/flow_control_practice/test/pjc.txt,flowxml=/Users/wuge/my_practice/perl_practice/flow_control_practice/test2.xml
+
+./TestFlowXMLParser.pl -P 1 -T FMO -O pjc=/Users/wuge/my_practice/perl_practice/flow_control_practice/test/pjc.txt,flowxml=/Users/wuge/my_practice/perl_practice/flow_control_practice/test2.xml
