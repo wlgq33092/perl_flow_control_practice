@@ -26,7 +26,7 @@ sub check {
     my $dom = $self->{dom};
 
     my ($root_node) = $dom->findnodes("/FMO");
-    my $root_node_name = $root_node->to_literal;
+    my $root_node_name = $root_node->nodeName;
     print "root node name: $root_node_name\n";
     my @switcher_nodes = $dom->findnodes("/$root_node_name/flow/switcher");
     my @switcher_names;
