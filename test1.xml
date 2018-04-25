@@ -1,14 +1,36 @@
 <?xml version="1.0" ?>
 <FMO>
     <flow>
-        <start>
-            <name>job1</name>
-        </start>
+        <start>job1</start>
         <job>
             <name>job1</name>
             <next>job2</next>
             <next>job5</next>
         </job>
+        <job>
+            <name>job3</name>
+            <trigger>trigger1</trigger>
+            <next>DONE</next>
+        </job>
+        <trigger>
+            <name>trigger1</name>
+            <condition>job3.done</condition>
+            <next>job5</next>
+        </trigger>
+        <job>
+            <name>job5</name>
+            <next>DONE</next>
+        </job>
+        <job>
+            <name>job2</name>
+            <next>switcher1</next>
+        </job>
+        <switcher>
+            <name>switcher1</name>
+            <condition>job2.done</condition>
+            <caseY>DONE</caseY>
+            <caseN>job5</caseN>
+        </switcher>
     </flow>
     <jobs>
         <job>
